@@ -9,7 +9,7 @@ import SwiftUI
 
 struct EventRowView: View {
     let event: Event
-    let factors: [Factor]
+    let factors: [FactorModel]
     
     @ViewBuilder
     func factorsView() -> some View {
@@ -24,6 +24,7 @@ struct EventRowView: View {
                 }
                 .font(.caption)
                 .padding(5)
+                .background(factor.change.color)
                 .border(.secondary)
             }
         }

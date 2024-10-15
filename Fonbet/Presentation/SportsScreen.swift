@@ -41,10 +41,6 @@ struct SportsScreen: View {
     @ViewBuilder
     func main() -> some View {
         VStack(alignment: .leading) {
-            TopSportsView(
-                sports: viewModel.sportCategories,
-                selectedSport: $viewModel.selectedSport
-            )
             
             List(viewModel.sports) { sport in
                 sportSection(sport: sport)
@@ -64,7 +60,7 @@ struct SportsScreen: View {
                         fetchingData = false
                     }
                     
-                    await viewModel.listenForData()
+                    //await viewModel.listenForData()
                 }
                 .onDisappear() {
                     Task {

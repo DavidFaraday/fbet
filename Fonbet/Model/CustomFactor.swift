@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct CustomFactor: Codable {
+struct CustomFactor: Codable, Hashable {
     let e: Int
     let countAll: Int
-    let factors: [Factor]
+    var factors: [Factor]
 
     enum CodingKeys: String, CodingKey {
         case e = "e"

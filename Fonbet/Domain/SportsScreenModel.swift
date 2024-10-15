@@ -13,25 +13,16 @@ final class SportsScreenModel: ObservableObject {
     private var packetVersion: Int?
     private var fetchingData = false
     
-    @Published private(set) var sportsDictionary: [Int: Sport] = [:]
-    private var eventsDictionary: [Int: Event] = [:]
-    private var factorDictionary: [Int: FactorModel] = [:]
+    @Published private var sportsDictionary: [Int: Sport] = [:]
+    @Published private var eventsDictionary: [Int: Event] = [:]
+    @Published private var factorDictionary: [Int: CustomFactorModel] = [:]
         
     private var fetchingTask: Task<Void, Never>?
     
     
-//    @Published private(set) var sportCategories: [Sport] = []
-//    @Published var selectedSport: Sport?
-    
-//    var sports: [Sport] {
-//        guard let selectedSport else { return [] }
-//        return Array(
-//            sportsDictionary.values
-//                .filter( { $0.parentId == selectedSport.id } )
-//                .sorted()
-//                .prefix(10)
-//        )
-//    }
+    var sports: [Sport] {
+        sportsDictionary.values.sorted()
+    }
     
     init(lineRepository: LineRepository = .shared) {
         self.lineRepository = lineRepository
@@ -81,13 +72,9 @@ final class SportsScreenModel: ObservableObject {
             
             updateSports(with: lineData.sports)
             updateEvents(with: lineData.events)
+            resetFactorColors()
             updateFactors(with: lineData.customFactors)
             
-//            sportCategories = sportsDictionary.values.filter { $0.parentId == nil }.sorted()
-//            
-//            if selectedSport == nil {
-//                selectedSport = sportCategories.first
-//            }
             
             print("Done fetching")
             print("___________________")
@@ -101,7 +88,7 @@ final class SportsScreenModel: ObservableObject {
     /// Gets factors for the specific Event, currently returns only (1, X, 2) factors
     /// - Parameter eventId: EventId you need factors for
     /// - Returns: Array of Factors
-    func factors(for eventId: Int) -> [Factor] {
+    func factors(for eventId: Int) -> [FactorModel] {
         factorDictionary[eventId]?
             .factors.values
             .filter({
@@ -154,12 +141,12 @@ final class SportsScreenModel: ObservableObject {
     /// - Parameter newFactors: Latest factors
     private func updateFactors(with newFactors: [CustomFactor]) {
         print("allFactors: \(newFactors.count)")
-
+        
         var tempFactorDictionary = factorDictionary
         
         for factor in newFactors {
                         
-            let factorModel = factorDictionary[factor.e] ?? FactorModel(customFactor: factor)
+            let factorModel = factorDictionary[factor.e] ?? CustomFactorModel(customFactor: factor)
             
             factorModel.updateFactors(customFactor: factor)
             
@@ -167,5 +154,13 @@ final class SportsScreenModel: ObservableObject {
         }
         
         factorDictionary = tempFactorDictionary
+    }
+    
+    private func resetFactorColors() {
+        let allFactors = factorDictionary.values
+        
+        for factor in allFactors {
+            factor.resetColors()
+        }
     }
 }

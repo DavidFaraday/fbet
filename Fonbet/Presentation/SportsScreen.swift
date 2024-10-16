@@ -60,7 +60,7 @@ struct SportsScreen: View {
                         fetchingData = false
                     }
                     
-                    //await viewModel.listenForData()
+                    await viewModel.listenForData()
                 }
                 .onDisappear() {
                     Task {

@@ -11,14 +11,10 @@ import Foundation
 final class AccountScreenModel: ObservableObject {
     
     private let lineRepository: LineRepository
-    private var packetVersion: Int?
     private var fetchingData = false
+    private var packetVersion = 0
     
-    @Published private(set) var sports: [SportModel] = []
-//    private var events: [Event] = []
     
-    private var eventModels: [EventModel] = []
-
     private var fetchingTask: Task<Void, Never>?
     
     
@@ -26,10 +22,6 @@ final class AccountScreenModel: ObservableObject {
         self.lineRepository = lineRepository
     }
     
-    func events(for sportId: Int) -> [EventModel] {
-        eventModels.filter( { $0.sportId == sportId && $0.level == 1 } )
-    }
-
     
     /// Start listening for Line data with refreshing every 5 seconds
     func listenForData() async {
@@ -67,65 +59,12 @@ final class AccountScreenModel: ObservableObject {
         do {
             fetchingData = true
             
-            let lineData = try await lineRepository.fetchLine(with: packetVersion ?? 0)
+            let lineData = try await lineRepository.fetchLine(with: packetVersion)
+            self.packetVersion = lineData.packetVersion
+
             
-            packetVersion = lineData.packetVersion
-
-            eventModels = updateEvents(with: lineData.events)
-            sports = updateSports(with: lineData.sports)
-
         } catch {
             print("Error: \(error)")
         }
     }
-    
-    
-    func updateSports(with newSports: [Sport]) -> [SportModel] {
-        print("have \(newSports.count) new sports")
-        
-        let newModels = newSports.map( {SportModel(sport: $0) } )
-
-        
-        var tempSports = sports
-        
-        for updatedSport in newModels {
-            if let existingIndex = tempSports.firstIndex(where: { $0.id == updatedSport.id }) {
-                tempSports[existingIndex] = updatedSport
-            } else {
-                tempSports.append(updatedSport)
-            }
-        }
-        
-        return tempSports.map( { $0.setEventsDictionary(events: events(for: $0.id)) } )
-    }
-    
-    func updateEvents(with newEvents: [Event]) -> [EventModel] {
-        print("have \(newEvents.count) new events")
-        
-        let newEventModels = newEvents.map( { EventModel(event: $0) } )
-
-        
-        var tempEvents = eventModels
-        
-        for updatedEvent in newEventModels {
-            if let existingIndex = tempEvents.firstIndex(where: { $0.id == updatedEvent.id }) {
-                tempEvents[existingIndex] = updatedEvent
-            } else {
-                tempEvents.append(updatedEvent)
-            }
-        }
-
-        return tempEvents
-    }
-//    
-//    func createEventModels(from events: [Event]) {
-//        print("have \(events.count) new")
-//        
-//        eventModel = events.map( { EventModel(event: $0)})
-//    }
-    
-//    func events(for sportId: Int) -> [EventModel] {
-//        eventModel.filter( { $0.sportId == sportId && $0.level == 1 } )
-//    }
-
 }

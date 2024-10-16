@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Event: Codable, Identifiable {
+struct Event: Codable, Identifiable, Comparable {
     let id: Int
     let sortOrder: String
     let level: Int
@@ -37,5 +37,10 @@ struct Event: Codable, Identifiable {
         case name = "name"
         case startTime = "startTime"
     }
+    
+    static func < (lhs: Event, rhs: Event) -> Bool {
+        lhs.sortOrder < rhs.sortOrder
+    }
+
 }
 

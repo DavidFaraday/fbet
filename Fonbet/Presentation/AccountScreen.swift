@@ -12,18 +12,16 @@ struct AccountScreen: View {
     @StateObject var viewModel = AccountScreenModel()
     
     @ViewBuilder
-    func sportSection(sport: SportModel) -> some View {
+    func sportSection(sport: Sport) -> some View {
         Section {
-            ForEach(sport.events) { event in
-                VStack(alignment: .leading) {
-                    Text(event.team1 ?? "no team 1")
-                    Text(event.team2 ?? "no team 2")
-                }
-//                EventRowView(
-//                    event: event,
-//                    factors: viewModel.factors(for: event.id)
-//                )
-            }
+//            ForEach(viewModel.events(for: sport.id)) { event in
+//                Text(event.team1 ?? "no t1")
+//                Text(event.team2 ?? "no t2")
+////                EventRowView(
+////                    event: event,
+////                    factors: viewModel.factors(for: event.id)
+////                )
+//            }
 
         } header: {
             Text(sport.name)
@@ -33,24 +31,31 @@ struct AccountScreen: View {
     
 
     
-    @ViewBuilder
-    func main() -> some View {
-        VStack(alignment: .leading) {
-            
-            List(viewModel.sports) { sport in
-                sportSection(sport: sport)
-            }
-            .listStyle(.plain)
-        }
-    }
+//    @ViewBuilder
+//    func main() -> some View {
+//        VStack(alignment: .leading) {
+//            HStack {
+//                Text("s: \(viewModel.lineDataModel?.sportsDictionary.values.count ?? 0)")
+//                Text("e: \(viewModel.lineDataModel?.eventsDictionary.values.count ?? 0)")
+//                Text("f: \(viewModel.lineDataModel?.factorDictionary.values.count ?? 0)")
+//                Text("pv: \(viewModel.lineDataModel?.packetVersion ?? 0)")
+//            }
+//            .padding()
+//            
+//            List(viewModel.sports) { sport in
+//                sportSection(sport: sport)
+//            }
+//            .listStyle(.plain)
+//        }
+//    }
 
     
     
     var body: some View {
         NavigationStack {
-            main()
+            Text("d")
                 .task {
-                    await viewModel.listenForData()
+//                    await viewModel.listenForData()
                 }
                 .onDisappear() {
                     Task {

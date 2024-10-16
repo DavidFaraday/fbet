@@ -10,7 +10,7 @@ import Foundation
 final class SportsScreenModel: ObservableObject {
     
     private let lineRepository: LineRepository
-    private var packetVersion: Int?
+    private var packetVersion = 0
     private var fetchingData = false
     
     @Published private var sportsDictionary: [Int: Sport] = [:]
@@ -63,10 +63,10 @@ final class SportsScreenModel: ObservableObject {
         defer { fetchingData = false }
         
         do {
-            print("Fetching line data...")
+
             fetchingData = true
             
-            let lineData = try await lineRepository.fetchLine(with: packetVersion ?? 0)
+            let lineData = try await lineRepository.fetchLine(with: packetVersion)
             
             packetVersion = lineData.packetVersion
             
@@ -75,9 +75,6 @@ final class SportsScreenModel: ObservableObject {
             resetFactorColors()
             updateFactors(with: lineData.customFactors)
             
-            
-            print("Done fetching")
-            print("___________________")
         } catch {
             print("Error: \(error)")
         }
@@ -103,64 +100,57 @@ final class SportsScreenModel: ObservableObject {
     /// - Parameter sportId: SportId that you need events for
     /// - Returns: Array of Level 1 Events
     func events(for sportId: Int) -> [Event] {
-        eventsDictionary.values.filter( { $0.sportID == sportId && $0.level == 1 } )
+        eventsDictionary.values.filter( { $0.sportID == sportId && $0.level == 1 } ).sorted()
     }
         
     
     /// Updates sports dictionary
     /// - Parameter newSports: latest sports
     private func updateSports(with newSports: [Sport]) {
-        print("allSports: \(newSports.count)")
-
-        var tempSportsDictionary = sportsDictionary
+        print("received news sports: \(newSports.count)")
         
-        for sport in newSports {
-            tempSportsDictionary[sport.id] = sport
-        }
+        guard !newSports.isEmpty else { return }
         
-        sportsDictionary = tempSportsDictionary
+        let newSportsDict = newSports.reduce(into: [:]) { $0[$1.id] = $1 }
+        self.sportsDictionary.merge(newSportsDict) { (_, new) in new }
+        
     }
     
     
     /// Updates events dictionary
     /// - Parameter newEvents: latest events
     private func updateEvents(with newEvents: [Event]) {
-        print("mainEvents: \(newEvents.count)")
+        print("received news events: \(newEvents.count)")
 
-        var tempEventsDictionary = eventsDictionary
-        
-        for event in newEvents {
-            tempEventsDictionary[event.id] = event
-        }
-        
-        eventsDictionary = tempEventsDictionary
+        guard !newEvents.isEmpty else { return }
+
+        let newEventsDict = newEvents.reduce(into: [:]) { $0[$1.id] = $1 }
+        self.eventsDictionary.merge(newEventsDict) { (_, new) in new }
+
     }
     
     
     /// Updates factors by setting factors dictionary with custom FactorModel
     /// - Parameter newFactors: Latest factors
     private func updateFactors(with newFactors: [CustomFactor]) {
-        print("allFactors: \(newFactors.count)")
+        print("received news factors: \(newFactors.count)")
         
-        var tempFactorDictionary = factorDictionary
-        
-        for factor in newFactors {
-                        
+        guard !newFactors.isEmpty else { return }
+
+        let newFactorDict: [Int: CustomFactorModel] = newFactors.reduce(into: [:]) { dict, factor in
+            // Get the existing factor model or create a new one
             let factorModel = factorDictionary[factor.e] ?? CustomFactorModel(customFactor: factor)
             
+            // Update the factor model with the new factor
             factorModel.updateFactors(customFactor: factor)
             
-            tempFactorDictionary[factor.e] = factorModel
+            dict[factor.e] = factorModel
         }
         
-        factorDictionary = tempFactorDictionary
+        self.factorDictionary.merge(newFactorDict) { (_, new) in new }
     }
     
     private func resetFactorColors() {
-        let allFactors = factorDictionary.values
-        
-        for factor in allFactors {
-            factor.resetColors()
-        }
+        factorDictionary.values.forEach { $0.resetColors() }
     }
 }

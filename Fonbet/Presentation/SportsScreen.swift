@@ -22,30 +22,38 @@ struct SportsScreen: View {
         
     @ViewBuilder
     func sportSection(sport: Sport) -> some View {
-        Section {
+        LazyVStack(alignment: .leading) {
+            Text(sport.name)
+                .font(.caption)
+                .bold()
+                .padding(.bottom, 5)
+
+
             ForEach(viewModel.events(for: sport.id)) { event in
 
                 EventRowView(
                     event: event,
                     factors: viewModel.factors(for: event.id)
                 )
+                
+                Divider()
+                    .padding(.vertical, 3)
             }
-
-        } header: {
-            Text(sport.name)
-                .font(.caption2)
+            
         }
+        .padding(.bottom, 10)
     }
     
     
     @ViewBuilder
     func main() -> some View {
-        VStack(alignment: .leading) {
-            
-            List(viewModel.sports) { sport in
-                sportSection(sport: sport)
+        ScrollView {
+            LazyVStack {
+                ForEach(viewModel.sports) { sport in
+                    sportSection(sport: sport)
+                }
             }
-            .listStyle(.plain)
+            .padding()
         }
     }
     

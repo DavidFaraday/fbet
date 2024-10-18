@@ -11,7 +11,7 @@ import SwiftUI
 struct FonbetApp: App {
     var body: some Scene {
         WindowGroup {
-            TabBarView()
+            SportsScreen()
         }
     }
 }

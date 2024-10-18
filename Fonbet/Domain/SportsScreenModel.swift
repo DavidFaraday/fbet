@@ -100,7 +100,7 @@ final class SportsScreenModel: ObservableObject {
     /// - Parameter sportId: SportId that you need events for
     /// - Returns: Array of Level 1 Events
     func events(for sportId: Int) -> [Event] {
-        eventsDictionary.values.filter( { $0.sportID == sportId && $0.level == 1 } ).sorted()
+        eventsDictionary.values.filter( { $0.sportId == sportId && $0.level == 1 } ).sorted()
     }
         
     

@@ -1,10 +1,10 @@
 //
-//  HttpMethod.swift
-//  B2C
+//  FactorType.swift
+//  Fonbet
 //
-//  Created by Christos Chadjikyriacou on 05/10/2023.
-//  Copyright © 2023 B2C. All rights reserved.
+//  Created by David Kababyan on 13/10/2024.
 //
+
 
 import Foundation
 

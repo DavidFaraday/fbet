@@ -14,11 +14,12 @@ final class SportsScreenModel: ObservableObject {
     private var fetchingData = false
     
     @Published private var sportsDictionary: [Int: Sport] = [:]
-    @Published private var eventsDictionary: [Int: Event] = [:]
     @Published private var factorDictionary: [Int: CustomFactorModel] = [:]
-        
-    private var fetchingTask: Task<Void, Never>?
+    @Published private var groupedEvents: [Int: [Event]] = [:]
     
+    private var fetchingTask: Task<Void, Never>?
+    private var eventsDictionary: [Int: Event] = [:]
+
     
     var sports: [Sport] {
         sportsDictionary.values.sorted()
@@ -28,6 +29,29 @@ final class SportsScreenModel: ObservableObject {
         self.lineRepository = lineRepository
     }
     
+    
+    
+    /// Gets factors for the specific Event, currently returns only (1, X, 2) factors
+    /// - Parameter eventId: EventId you need factors for
+    /// - Returns: Array of Factors
+    func factors(for eventId: Int) -> [FactorModel] {
+        factorDictionary[eventId]?
+            .factors
+            .values
+            .filter({
+                $0.f == FactorType.one.rawValue ||
+                $0.f == FactorType.draw.rawValue ||
+                $0.f == FactorType.two.rawValue
+            })
+            .sorted() ?? []
+    }
+    
+    /// Gets the level 1 events for the selected sport
+    /// - Parameter sportId: SportId that you need events for
+    /// - Returns: Array of Level 1 Events
+    func events(for sportId: Int) -> [Event] {
+        groupedEvents[sportId] ?? []
+    }
     
     /// Start listening for Line data with refreshing every 5 seconds
     func listenForData() async {
@@ -57,77 +81,65 @@ final class SportsScreenModel: ObservableObject {
     /// Fetches new line data and updates the current one with the latest info
     @MainActor
     func fetchLineData() async {
-
-        guard !fetchingData else { return }
         
+        guard !fetchingData else { return }
+        fetchingData = true
+
         defer { fetchingData = false }
         
         do {
-
-            fetchingData = true
-            
             let lineData = try await lineRepository.fetchLine(with: packetVersion)
             
+            let start = Date()
             packetVersion = lineData.packetVersion
             
             updateSports(with: lineData.sports)
             updateEvents(with: lineData.events)
+            self.groupedEvents = groupEventsBySportId(events: Array(eventsDictionary.values))
+            
             resetFactorColors()
             updateFactors(with: lineData.customFactors)
+            
+            print("finished all in \(Date().timeIntervalSince(start))")
+            print("***********")
             
         } catch {
             print("Error: \(error)")
         }
     }
     
-    
-    
-    /// Gets factors for the specific Event, currently returns only (1, X, 2) factors
-    /// - Parameter eventId: EventId you need factors for
-    /// - Returns: Array of Factors
-    func factors(for eventId: Int) -> [FactorModel] {
-        factorDictionary[eventId]?
-            .factors.values
-            .filter({
-                $0.f == FactorType.one.rawValue ||
-                $0.f == FactorType.draw.rawValue ||
-                $0.f == FactorType.two.rawValue
-            })
-            .sorted() ?? []
+    private func groupEventsBySportId(events: [Event]) -> [Int: [Event]] {
+        return events.reduce(into: [Int: [Event]]()) { result, event in
+            // Keep level 1 sports only
+            guard event.level == 1 else { return }
+            
+            result[event.sportId, default: []].append(event)
+        }
+        .mapValues { $0.sorted() }
     }
     
-    /// Gets the level 1 events for the selected sport
-    /// - Parameter sportId: SportId that you need events for
-    /// - Returns: Array of Level 1 Events
-    func events(for sportId: Int) -> [Event] {
-        eventsDictionary.values.filter( { $0.sportId == sportId && $0.level == 1 } ).sorted()
-    }
-        
-    
-    /// Updates sports dictionary
-    /// - Parameter newSports: latest sports
     private func updateSports(with newSports: [Sport]) {
-        print("received news sports: \(newSports.count)")
-        
-        guard !newSports.isEmpty else { return }
-        
-        let newSportsDict = newSports.reduce(into: [:]) { $0[$1.id] = $1 }
-        self.sportsDictionary.merge(newSportsDict) { (_, new) in new }
-        
+        updateDictionary(dictionary: &sportsDictionary, with: newSports)
     }
     
-    
-    /// Updates events dictionary
-    /// - Parameter newEvents: latest events
     private func updateEvents(with newEvents: [Event]) {
-        print("received news events: \(newEvents.count)")
-
-        guard !newEvents.isEmpty else { return }
-
-        let newEventsDict = newEvents.reduce(into: [:]) { $0[$1.id] = $1 }
-        self.eventsDictionary.merge(newEventsDict) { (_, new) in new }
-
+        updateDictionary(dictionary: &eventsDictionary, with: newEvents)
     }
+    
+    
+    private func updateDictionary<T: Identifiable>(dictionary: inout [Int: T], with newItems: [T]) {
+        
+        guard !newItems.isEmpty else { return }
+        
+        let newItemsDict:[Int: T] = newItems.reduce(into: [:]) { dict, item in
+            
+            guard let intID = item.id as? Int else { return }
+            dict[intID] = item
+        }
+        
+        dictionary.merge(newItemsDict) { (_, new) in new }
+    }
+    
     
     
     /// Updates factors by setting factors dictionary with custom FactorModel
@@ -136,7 +148,7 @@ final class SportsScreenModel: ObservableObject {
         print("received news factors: \(newFactors.count)")
         
         guard !newFactors.isEmpty else { return }
-
+        
         let newFactorDict: [Int: CustomFactorModel] = newFactors.reduce(into: [:]) { dict, factor in
             // Get the existing factor model or create a new one
             let factorModel = factorDictionary[factor.e] ?? CustomFactorModel(customFactor: factor)
@@ -148,6 +160,7 @@ final class SportsScreenModel: ObservableObject {
         }
         
         self.factorDictionary.merge(newFactorDict) { (_, new) in new }
+        
     }
     
     private func resetFactorColors() {

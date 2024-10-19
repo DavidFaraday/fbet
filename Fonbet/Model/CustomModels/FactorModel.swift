@@ -45,4 +45,8 @@ struct FactorModel: Comparable, Hashable {
         lhs.pt == rhs.pt &&
         lhs.change == rhs.change
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(f)
+    }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Event: Codable, Identifiable, Comparable, Hashable {
+struct Event: Codable, Identifiable, Comparable {
     let id: Int
     let sortOrder: String
     let level: Int
@@ -42,8 +42,5 @@ struct Event: Codable, Identifiable, Comparable, Hashable {
         lhs.sortOrder < rhs.sortOrder
     }
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
 }
 

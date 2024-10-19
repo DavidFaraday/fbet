@@ -29,9 +29,5 @@ struct Sport: Codable, Identifiable, Equatable, Comparable, Hashable {
         case kind = "kind"
         case name = "name"
     }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
 }
 

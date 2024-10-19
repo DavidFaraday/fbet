@@ -28,7 +28,6 @@ class CustomFactorModel {
 
             let oldFactorModel = factors[factor.f]
             
-
             let change: FactorChange
             
             if let oldModel = oldFactorModel {

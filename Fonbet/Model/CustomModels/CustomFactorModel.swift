@@ -17,8 +17,10 @@ class CustomFactorModel {
     }
     
     func resetColors() {
-        for factor in factors.values where factor.change != .noChange {
-            factors[factor.f] = factor.resetChange()
+        for key in factors.keys {
+            if factors[key]?.change != .noChange {
+                factors[key]?.resetChange()
+            }
         }
     }
     

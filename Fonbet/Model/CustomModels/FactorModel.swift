@@ -12,7 +12,7 @@ struct FactorModel: Comparable, Hashable {
     let v: Double
     let p: Int?
     let pt: String?
-    let change: FactorChange
+    var change: FactorChange
     
     init(factor: Factor, change: FactorChange = .noChange) {
         self.f = factor.f
@@ -22,16 +22,8 @@ struct FactorModel: Comparable, Hashable {
         self.change = change
     }
     
-    private init(factor: FactorModel) {
-        self.f = factor.f
-        self.v = factor.v
-        self.p = factor.p
-        self.pt = factor.pt
+    mutating func resetChange() {
         self.change = .noChange
-    }
-    
-    func resetChange() -> FactorModel {
-        .init(factor: self)
     }
     
     static func < (lhs: FactorModel, rhs: FactorModel) -> Bool {
